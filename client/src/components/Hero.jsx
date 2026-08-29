@@ -1,8 +1,21 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "../assets/hero-image.jpg";
+
 function Hero() {
+  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+
+  const handleSignUp = () => {
+    navigate("/register", {
+      state: {
+        email: email,
+      },
+    });
+  };
+
   return (
-    <section className="min-h-[70vh]  rounded-lg flex items-center py-16">
+    <section className="min-h-[70vh] flex items-center py-16">
       <div className="max-w-7xl mx-auto w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 
@@ -26,25 +39,28 @@ function Hero() {
               <input
                 type="email"
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="input input-bordered w-full"
               />
 
-              <Link
-                to="/register"
-                className="btn btn-primary"
+              <button
+                type="button"
+                onClick={handleSignUp}
+                className="btn btn-primary whitespace-nowrap"
               >
                 Sign Up for Free
-              </Link>
+              </button>
             </div>
           </div>
 
           {/* Right Image */}
           <div className="flex justify-center">
-            <div className="w-full max-w-lg ">
+            <div className="w-full max-w-lg">
               <img
                 src={heroImage}
                 alt="TaskFlow task management illustration"
-                className="w-full h-auto rounded-lg"
+                className="w-full h-auto"
               />
             </div>
           </div>
