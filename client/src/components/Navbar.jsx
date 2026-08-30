@@ -7,9 +7,10 @@ import { auth } from "../firebase/firebase.config";
 import { useAuth } from "../context/useAuth";
 
 function Navbar() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Logout
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -19,10 +20,10 @@ function Navbar() {
     }
   };
 
-  // Active link styling
+  // Active link style
   const navLinkClass = ({ isActive }) =>
     isActive
-      ? "active font-semibold"
+      ? "active font-semibold text-primary"
       : "";
 
   return (
@@ -31,7 +32,7 @@ function Navbar() {
       {/* LEFT SIDE */}
       <div className="navbar-start">
 
-        {/* Mobile Menu */}
+        {/* Mobile menu */}
         <div className="dropdown">
 
           <div
@@ -57,45 +58,33 @@ function Navbar() {
 
           <ul
             tabIndex={-1}
-            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
+            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-10 mt-3 w-52 p-2 shadow"
           >
             <li>
-              <NavLink
-                to="/"
-                className={navLinkClass}
-              >
+              <NavLink to="/" className={navLinkClass}>
                 Home
               </NavLink>
             </li>
 
             <li>
-              <NavLink
-                to="/services"
-                className={navLinkClass}
-              >
+              <NavLink to="/services" className={navLinkClass}>
                 Services
               </NavLink>
             </li>
 
             <li>
-              <NavLink
-                to="/dashboard"
-                className={navLinkClass}
-              >
+              <NavLink to="/dashboard" className={navLinkClass}>
                 Dashboard
               </NavLink>
             </li>
 
             <li>
-              <NavLink
-                to="/tasks"
-                className={navLinkClass}
-              >
+              <NavLink to="/tasks" className={navLinkClass}>
                 Tasks
               </NavLink>
             </li>
 
-            {/* Update Profile - Logged in users only */}
+            {/* Update Profile only when logged in */}
             {user && (
               <li>
                 <NavLink
@@ -107,7 +96,6 @@ function Navbar() {
               </li>
             )}
           </ul>
-
         </div>
 
         {/* Logo */}
@@ -123,10 +111,9 @@ function Navbar() {
 
           TaskFlow
         </Link>
-
       </div>
 
-      {/* CENTER MENU */}
+      {/* CENTER NAVIGATION */}
       <div className="navbar-center hidden lg:flex">
 
         <ul className="menu menu-horizontal px-1">
@@ -134,6 +121,7 @@ function Navbar() {
           <li>
             <NavLink
               to="/"
+              end
               className={navLinkClass}
             >
               Home
@@ -167,7 +155,7 @@ function Navbar() {
             </NavLink>
           </li>
 
-          {/* Update Profile */}
+          {/* Update Profile only when logged in */}
           {user && (
             <li>
               <NavLink
@@ -180,23 +168,27 @@ function Navbar() {
           )}
 
         </ul>
-
       </div>
 
       {/* RIGHT SIDE */}
       <div className="navbar-end">
 
-        {!loading && !user && (
+        {!user ? (
+          /* Logged out */
           <>
-            {/* Login */}
             <NavLink
               to="/login"
-              className="mr-4"
+              className={({ isActive }) =>
+                `mr-4 ${
+                  isActive
+                    ? "text-primary font-semibold"
+                    : ""
+                }`
+              }
             >
               Login
             </NavLink>
 
-            {/* Register */}
             <Link
               to="/register"
               className="btn btn-primary hidden md:flex"
@@ -204,19 +196,16 @@ function Navbar() {
               Get TaskFlow for free
             </Link>
           </>
-        )}
-
-        {!loading && user && (
+        ) : (
+          /* Logged in */
           <div className="flex items-center gap-3">
 
             {/* Profile */}
             <div
               className="tooltip tooltip-bottom"
-              data-tip={user.displayName || "User"}
+              data-tip={user.displayName || user.email}
             >
-
               <Link to="/update-profile">
-
                 <div className="avatar">
 
                   <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
@@ -224,27 +213,21 @@ function Navbar() {
                     {user.photoURL ? (
                       <img
                         src={user.photoURL}
-                        alt={
-                          user.displayName ||
-                          "Profile"
-                        }
+                        alt={user.displayName || "Profile"}
                       />
                     ) : (
-                      <div className="bg-primary text-primary-content w-full h-full flex items-center justify-center text-lg font-semibold">
-                        {user.displayName
-                          ? user.displayName
-                              .charAt(0)
-                              .toUpperCase()
-                          : "U"}
+                      <div className="flex items-center justify-center w-full h-full bg-primary text-primary-content font-bold text-lg">
+                        {(user.displayName ||
+                          user.email ||
+                          "U")
+                          .charAt(0)
+                          .toUpperCase()}
                       </div>
                     )}
 
                   </div>
-
                 </div>
-
               </Link>
-
             </div>
 
             {/* Logout */}
@@ -259,7 +242,6 @@ function Navbar() {
         )}
 
       </div>
-
     </div>
   );
 }

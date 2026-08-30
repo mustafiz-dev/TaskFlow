@@ -94,7 +94,17 @@ function Login() {
 
       const provider = new GoogleAuthProvider();
 
-      await signInWithPopup(auth, provider);
+      // await signInWithPopup(auth, provider);
+       await signInWithPopup(auth, provider);
+
+// const firebaseUser = result.user;
+
+// console.log("Google login successful");
+// console.log("User:", firebaseUser);
+// console.log("Name:", firebaseUser.displayName);
+// console.log("Email:", firebaseUser.email);
+// console.log("Photo URL:", firebaseUser.photoURL);
+      
 
       console.log("Google login successful");
 
