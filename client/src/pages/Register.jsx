@@ -1,13 +1,150 @@
+
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+
+import { Eye, EyeOff } from "lucide-react";
+
+import { auth } from "../firebase/firebase.config";
 
 function Register() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState(location.state?.email || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Password validation
+  const passwordRules = {
+    minLength: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+  };
+
+  const isPasswordValid =
+    passwordRules.minLength &&
+    passwordRules.uppercase &&
+    passwordRules.lowercase &&
+    passwordRules.number;
+
+  // Send Firebase user information to MongoDB through Express
+  const saveUserToDatabase = async (firebaseUser) => {
+    const response = await fetch("http://localhost:5000/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        firebaseUid: firebaseUser.uid,
+        name: firebaseUser.displayName || name,
+        email: firebaseUser.email,
+        photoURL: firebaseUser.photoURL || "",
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to save user");
+    }
+
+    return data;
+  };
+
+  // Email/Password Registration
+  const handleRegister = async () => {
+    setError("");
+
+    if (!name || !email || !password || !confirmPassword) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    if (!isPasswordValid) {
+      setError("Please meet all password requirements.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Create Firebase account
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const firebaseUser = userCredential.user;
+
+      // Add user's name to Firebase profile
+      await updateProfile(firebaseUser, {
+        displayName: name,
+      });
+
+      // Save user in MongoDB
+      await saveUserToDatabase(firebaseUser);
+
+      console.log("User registered successfully");
+
+      navigate("/");
+    } catch (error) {
+      console.error("Registration error:", error);
+
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google Registration
+  const handleGoogleRegister = async () => {
+    setError("");
+
+    try {
+      setLoading(true);
+
+      const provider = new GoogleAuthProvider();
+
+      // Sign in with Google
+      const result = await signInWithPopup(auth, provider);
+
+      const firebaseUser = result.user;
+
+      // Save Google user in MongoDB
+      await saveUserToDatabase(firebaseUser);
+
+      console.log("Google user registered successfully");
+
+      navigate("/");
+    } catch (error) {
+      console.error("Google registration error:", error);
+
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section className="min-h-[80vh] flex items-center justify-center px-4 py-4">
@@ -27,6 +164,13 @@ function Register() {
         {/* Registration Card */}
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body">
+
+            {/* Error Message */}
+            {error && (
+              <div className="alert alert-error mb-2">
+                <span>{error}</span>
+              </div>
+            )}
 
             {/* Name */}
             <fieldset className="fieldset">
@@ -64,13 +208,74 @@ function Register() {
                 Password
               </label>
 
-              <input
-                type="password"
-                placeholder="Enter your password"
-                className="input input-bordered w-full"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  className="input input-bordered w-full pr-12"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/60 hover:text-base-content"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={
+                    showPassword ? "Hide password" : "Show password"
+                  }
+                >
+                  {showPassword ? (
+                    <Eye className="w-5 h-5" />
+                    
+                  ) : (
+                    <EyeOff className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+
+              {/* Password Requirements */}
+              <div className="mt-3 text-sm space-y-1">
+                <p
+                  className={
+                    passwordRules.minLength
+                      ? "text-success"
+                      : "text-base-content/60"
+                  }
+                >
+                  {passwordRules.minLength ? "✓" : "○"} At least 8 characters
+                </p>
+
+                <p
+                  className={
+                    passwordRules.uppercase
+                      ? "text-success"
+                      : "text-base-content/60"
+                  }
+                >
+                  {passwordRules.uppercase ? "✓" : "○"} One uppercase letter
+                </p>
+
+                <p
+                  className={
+                    passwordRules.lowercase
+                      ? "text-success"
+                      : "text-base-content/60"
+                  }
+                >
+                  {passwordRules.lowercase ? "✓" : "○"} One lowercase letter
+                </p>
+
+                <p
+                  className={
+                    passwordRules.number
+                      ? "text-success"
+                      : "text-base-content/60"
+                  }
+                >
+                  {passwordRules.number ? "✓" : "○"} One number
+                </p>
+              </div>
             </fieldset>
 
             {/* Confirm Password */}
@@ -79,21 +284,60 @@ function Register() {
                 Confirm Password
               </label>
 
-              <input
-                type="password"
-                placeholder="Confirm your password"
-                className="input input-bordered w-full"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  className="input input-bordered w-full pr-12"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/60 hover:text-base-content"
+                  onClick={() =>
+                    setShowConfirmPassword(!showConfirmPassword)
+                  }
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                >
+                  {showConfirmPassword ? (
+                    <Eye className="w-5 h-5" />
+                  ) : (
+                    
+                    <EyeOff className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+
+              {/* Password Match */}
+              {confirmPassword && (
+                <p
+                  className={`text-sm mt-1 ${
+                    password === confirmPassword
+                      ? "text-success"
+                      : "text-error"
+                  }`}
+                >
+                  {password === confirmPassword
+                    ? "✓ Passwords match"
+                    : "✕ Passwords do not match"}
+                </p>
+              )}
             </fieldset>
 
             {/* Create Account */}
             <button
               type="button"
               className="btn btn-primary w-full mt-4"
+              onClick={handleRegister}
+              disabled={loading}
             >
-              Create Account
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
 
             {/* Divider */}
@@ -103,6 +347,8 @@ function Register() {
             <button
               type="button"
               className="btn btn-outline w-full"
+              onClick={handleGoogleRegister}
+              disabled={loading}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -123,7 +369,7 @@ function Register() {
                 />
                 <path
                   fill="#EA4335"
-                  d="M12 6.37c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.83 3.46 14.63 2.5 12 2.5a9.74 9.74 0 0 0-8.7 5.38l3.24 2.52C7.31 8.09 9.46 6.37 12 6.37z"
+                  d="M12 6.37c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.83 3.46 14.63 2.5 12 2.5a9.74 9.74 0 0 0-8.7 5.38l3.24 2.52C7.31 8.09 9.46 6.37 6.54 13.6z"
                 />
               </svg>
 

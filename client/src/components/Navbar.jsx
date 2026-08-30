@@ -1,4 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
+import logo3 from "../assets/logo3.png"
 
 function Navbar() {
     return (
@@ -18,7 +19,10 @@ function Navbar() {
 
                     </ul>
                 </div>
-                <Link to={"/"} className="btn btn-ghost text-xl">TaskFlow</Link>
+                <div className="bg-white w-10px h-30px">
+                    
+                </div>
+                <Link to={"/"} className="btn btn-ghost text-2xl" > <img src={logo3} className="w-[40px] " alt="" />TaskFlow</Link>
             </div>
             <div className="navbar-center hidden lg:flex">
                 <ul className="menu menu-horizontal px-1">
@@ -29,8 +33,8 @@ function Navbar() {
                 </ul>
             </div>
             <div className="navbar-end">
-                <NavLink to={"/login"} className="mr-4">Login</NavLink>
-                <Link to={"#"} className="btn btn-primary">Get TaskFlow for free</Link>
+                <NavLink to={"/login"} className="mr-4 ">Login</NavLink>
+                <Link to={"/register"} className="btn btn-primary hidden md:flex">Get TaskFlow for free</Link>
             </div>
         </div>
     );

@@ -21,7 +21,7 @@ function Hero() {
 
           {/* Left Content */}
           <div>
-            <h1 className="text-5xl md:text-6xl font-bold leading-tight">
+            <h1 className="text-5xl md:text-4xl lg:text-6xl font-bold leading-tight">
               Manage Tasks.
               <br />
               <span className="text-primary">
@@ -29,7 +29,7 @@ function Hero() {
               </span>
             </h1>
 
-            <p className="mt-6 text-lg text-base-content/70 max-w-lg">
+            <p className="md:mt-6 md:text-lg text-base-content/70 max-w-lg">
               Organize your work, track your progress, and stay productive
               with TaskFlow.
             </p>
@@ -60,7 +60,7 @@ function Hero() {
               <img
                 src={heroImage}
                 alt="TaskFlow task management illustration"
-                className="w-full h-auto"
+                className="w-full h-auto rounded-lg"
               />
             </div>
           </div>
